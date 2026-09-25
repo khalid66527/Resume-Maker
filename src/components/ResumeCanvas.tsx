@@ -60,9 +60,13 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
       id: `proj-${Date.now()}`,
       title: 'Project Title',
       subtitle: 'Key Focus or Platform',
+      liveDemoLabel: 'Live Demo',
       liveDemoUrl: 'https://demo.vercel.app',
+      clientGithubLabel: 'Client GitHub',
       clientGithubUrl: 'https://github.com/username',
+      serverGithubLabel: 'Server GitHub',
       serverGithubUrl: 'https://github.com/username',
+      techStackLabel: 'Tech Stack:',
       techStackText: 'React, Next.js, Node.js, Express.js, MongoDB',
       bullets: [
         'Built full-stack application with interactive UI and optimized state workflows.',
@@ -199,38 +203,62 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
           />
         </div>
 
-        {/* Contact Links Row 2: Portfolio & LinkedIn with Instant Link Editors */}
+        {/* Contact Links Row 2: Portfolio, LinkedIn, GitHub with 100% Editable Labels and Links */}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-700 pt-0.5">
-          <EditableLink
-            prefix="Portfolio:"
-            label={data.contact.portfolio || 'devkhalid-chi.vercel.app'}
-            url={data.contact.portfolioUrl || 'https://devkhalid-chi.vercel.app'}
-            onChangeLabel={(val) => updateContact('portfolio', val)}
-            onChangeUrl={(val) => updateContact('portfolioUrl', val)}
-          />
+          {/* Portfolio */}
+          <div className="inline-flex items-center gap-1">
+            <Editable
+              value={data.contact.portfolioLabel || 'Portfolio:'}
+              onChange={(val) => updateContact('portfolioLabel', val)}
+              as="span"
+              className="font-semibold text-slate-800"
+              placeholder="Portfolio:"
+            />
+            <EditableLink
+              label={data.contact.portfolio || 'devkhalid-chi.vercel.app'}
+              url={data.contact.portfolioUrl || 'https://devkhalid-chi.vercel.app'}
+              onChangeLabel={(val) => updateContact('portfolio', val)}
+              onChangeUrl={(val) => updateContact('portfolioUrl', val)}
+            />
+          </div>
 
           <span>|</span>
 
-          <EditableLink
-            prefix="LinkedIn:"
-            label={data.contact.linkedin || 'linkedin.com/in/khalid2004'}
-            url={data.contact.linkedinUrl || 'https://linkedin.com/in/khalid2004'}
-            onChangeLabel={(val) => updateContact('linkedin', val)}
-            onChangeUrl={(val) => updateContact('linkedinUrl', val)}
-          />
+          {/* LinkedIn */}
+          <div className="inline-flex items-center gap-1">
+            <Editable
+              value={data.contact.linkedinLabel || 'LinkedIn:'}
+              onChange={(val) => updateContact('linkedinLabel', val)}
+              as="span"
+              className="font-semibold text-slate-800"
+              placeholder="LinkedIn:"
+            />
+            <EditableLink
+              label={data.contact.linkedin || 'linkedin.com/in/khalid2004'}
+              url={data.contact.linkedinUrl || 'https://linkedin.com/in/khalid2004'}
+              onChangeLabel={(val) => updateContact('linkedin', val)}
+              onChangeUrl={(val) => updateContact('linkedinUrl', val)}
+            />
+          </div>
 
-          {data.contact.github && (
-            <>
-              <span>|</span>
-              <EditableLink
-                prefix="GitHub:"
-                label={data.contact.github || 'github.com/khalid66527'}
-                url={data.contact.githubUrl || 'https://github.com/khalid66527'}
-                onChangeLabel={(val) => updateContact('github', val)}
-                onChangeUrl={(val) => updateContact('githubUrl', val)}
-              />
-            </>
-          )}
+          <span>|</span>
+
+          {/* GitHub */}
+          <div className="inline-flex items-center gap-1">
+            <Editable
+              value={data.contact.githubLabel || 'GitHub:'}
+              onChange={(val) => updateContact('githubLabel', val)}
+              as="span"
+              className="font-semibold text-slate-800"
+              placeholder="GitHub:"
+            />
+            <EditableLink
+              label={data.contact.github || 'github.com/khalid66527'}
+              url={data.contact.githubUrl || 'https://github.com/khalid66527'}
+              onChangeLabel={(val) => updateContact('github', val)}
+              onChangeUrl={(val) => updateContact('githubUrl', val)}
+            />
+          </div>
         </div>
       </header>
 
@@ -354,23 +382,23 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
                 <div className="flex items-center gap-1.5 text-[11px] text-blue-700 flex-wrap">
                   <span className="text-blue-600">•</span>
                   <EditableLink
-                    label="Live Demo"
+                    label={proj.liveDemoLabel || 'Live Demo'}
                     url={proj.liveDemoUrl || 'https://demo.vercel.app'}
-                    onChangeLabel={() => {}}
+                    onChangeLabel={(val) => updateProject(pIdx, 'liveDemoLabel', val)}
                     onChangeUrl={(val) => updateProject(pIdx, 'liveDemoUrl', val)}
                   />
                   <span>|</span>
                   <EditableLink
-                    label="Client GitHub"
+                    label={proj.clientGithubLabel || 'Client GitHub'}
                     url={proj.clientGithubUrl || 'https://github.com/username/client'}
-                    onChangeLabel={() => {}}
+                    onChangeLabel={(val) => updateProject(pIdx, 'clientGithubLabel', val)}
                     onChangeUrl={(val) => updateProject(pIdx, 'clientGithubUrl', val)}
                   />
                   <span>|</span>
                   <EditableLink
-                    label="Server GitHub"
+                    label={proj.serverGithubLabel || 'Server GitHub'}
                     url={proj.serverGithubUrl || 'https://github.com/username/server'}
-                    onChangeLabel={() => {}}
+                    onChangeLabel={(val) => updateProject(pIdx, 'serverGithubLabel', val)}
                     onChangeUrl={(val) => updateProject(pIdx, 'serverGithubUrl', val)}
                   />
                   {data.projects.length > 1 && (
@@ -386,14 +414,20 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
                 </div>
               </div>
 
-              {/* Tech Stack Line */}
-              <div className="text-xs text-slate-700 leading-snug">
-                <span className="font-bold text-slate-900 italic mr-1">Tech Stack:</span>
+              {/* Tech Stack Line with Editable Label */}
+              <div className="text-xs text-slate-700 leading-snug flex items-baseline flex-wrap">
+                <Editable
+                  value={proj.techStackLabel || 'Tech Stack:'}
+                  onChange={(val) => updateProject(pIdx, 'techStackLabel', val)}
+                  as="span"
+                  className="font-bold text-slate-900 italic mr-1"
+                  placeholder="Tech Stack:"
+                />
                 <Editable
                   value={proj.techStackText}
                   onChange={(val) => updateProject(pIdx, 'techStackText', val)}
                   as="span"
-                  className="italic text-slate-700"
+                  className="italic text-slate-700 flex-1"
                   placeholder="React, Next.js, Node.js, Express.js..."
                 />
               </div>
@@ -511,7 +545,13 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
         <div className="space-y-1 text-xs">
           <div className="flex items-baseline">
-            <span className="font-bold text-slate-900 mr-1.5">Languages:</span>
+            <Editable
+              value={data.languagesLabel || 'Languages:'}
+              onChange={(val) => updateField('languagesLabel', val)}
+              as="span"
+              className="font-bold text-slate-900 mr-1.5"
+              placeholder="Languages:"
+            />
             <Editable
               value={data.languages}
               onChange={(val) => updateField('languages', val)}
@@ -522,7 +562,13 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
           </div>
 
           <div className="flex items-baseline">
-            <span className="font-bold text-slate-900 mr-1.5">Additional Competencies:</span>
+            <Editable
+              value={data.additionalCompetenciesLabel || 'Additional Competencies:'}
+              onChange={(val) => updateField('additionalCompetenciesLabel', val)}
+              as="span"
+              className="font-bold text-slate-900 mr-1.5"
+              placeholder="Additional Competencies:"
+            />
             <Editable
               value={data.additionalCompetencies}
               onChange={(val) => updateField('additionalCompetencies', val)}
