@@ -2,17 +2,16 @@
 
 import React, { useState } from 'react';
 import { ResumeData } from '@/types/resume';
-import { exportToDocx, exportToPdf, exportToTxt, exportToHtml } from '@/lib/exportUtils';
+import { ALL_WORD_FORMATS, downloadInFormat } from '@/lib/formatExporters';
 import {
   Download,
   FileText,
-  FileCode,
-  FileJson,
   Printer,
   X,
   Check,
-  Globe,
-  Sparkles,
+  Search,
+  ChevronDown,
+  Layers,
 } from 'lucide-react';
 
 interface ExportModalProps {
@@ -26,191 +25,175 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onClose,
   data,
 }) => {
-  const [selectedFormat, setSelectedFormat] = useState<
-    'docx' | 'pdf' | 'txt' | 'html' | 'print' | 'json'
-  >('docx');
+  const [selectedFormatId, setSelectedFormatId] = useState<string>('docx');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
 
   if (!isOpen) return null;
 
+  const filteredFormats = ALL_WORD_FORMATS.filter(
+    (f) =>
+      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.extension.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const selectedFormat =
+    ALL_WORD_FORMATS.find((f) => f.id === selectedFormatId) || ALL_WORD_FORMATS[0];
+
   const handleExport = async () => {
     setIsExporting(true);
-    const cleanName = data.fullName.replace(/[^a-zA-Z0-9]/g, '_');
-
     try {
-      if (selectedFormat === 'docx') {
-        await exportToDocx(data, `${cleanName}_Resume.docx`);
-      } else if (selectedFormat === 'pdf') {
-        await exportToPdf('resume-canvas-sheet', `${cleanName}_Resume.pdf`);
-      } else if (selectedFormat === 'txt') {
-        exportToTxt(data, `${cleanName}_Resume.txt`);
-      } else if (selectedFormat === 'html') {
-        exportToHtml('resume-canvas-sheet', data, `${cleanName}_Resume.html`);
-      } else if (selectedFormat === 'print') {
-        onClose();
-        setTimeout(() => window.print(), 200);
-        return;
-      } else if (selectedFormat === 'json') {
-        const dataStr =
-          'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute('href', dataStr);
-        downloadAnchor.setAttribute('download', `${cleanName}_resume_backup.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-      }
+      await downloadInFormat(selectedFormatId, data, 'resume-canvas-sheet');
     } catch (err) {
-      console.error('Export failed:', err);
+      console.error('Download error:', err);
     } finally {
       setIsExporting(false);
       onClose();
     }
   };
 
-  const formats = [
-    {
-      id: 'docx',
-      title: 'Word Document (*.docx)',
-      desc: 'Microsoft Word-এ সরাসরি ওপেন ও এডিট করার উপযোগী ফাইল',
-      badge: 'Native Word',
-      icon: FileText,
-      color: 'text-blue-400 bg-blue-500/20 border-blue-500/30',
-    },
-    {
-      id: 'pdf',
-      title: 'PDF Document (*.pdf)',
-      desc: 'চাকরির আবেদনের জন্য স্ট্যান্ডার্ড ও প্রিন্ট-রেডি A4 ভেক্টর ফাইল',
-      badge: 'Recommended',
-      icon: FileText,
-      color: 'text-rose-400 bg-rose-500/20 border-rose-500/30',
-    },
-    {
-      id: 'txt',
-      title: 'Plain Text (*.txt)',
-      desc: 'ATS সিস্টেমে দ্রুত পেস্ট ও টেক্সট ফরম্যাটে কপি করার জন্য',
-      badge: 'ATS Safe',
-      icon: FileCode,
-      color: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
-    },
-    {
-      id: 'html',
-      title: 'Single Web Page (*.html)',
-      desc: 'যেকোনো ব্রাউজারে সুন্দরভাবে ওয়েবসাইট আকারে দেখার জন্য',
-      badge: 'Web Ready',
-      icon: Globe,
-      color: 'text-cyan-400 bg-cyan-500/20 border-cyan-500/30',
-    },
-    {
-      id: 'print',
-      title: 'Print Directly (A4 Paper)',
-      desc: 'সরাসরি প্রিন্টারে পাঠিয়ে কাগজের ফরম্যাটে প্রিন্ট করুন',
-      badge: 'Hardware Print',
-      icon: Printer,
-      color: 'text-amber-400 bg-amber-500/20 border-amber-500/30',
-    },
-    {
-      id: 'json',
-      title: 'JSON Backup (*.json)',
-      desc: 'ভবিষ্যতে রেজিউমে রিস্টোর ও এডিট করার ফুল ডেটা ব্যাকআপ',
-      badge: 'Full Backup',
-      icon: FileJson,
-      color: 'text-purple-400 bg-purple-500/20 border-purple-500/30',
-    },
-  ];
+  const handlePrint = () => {
+    onClose();
+    setTimeout(() => window.print(), 200);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden text-slate-100 flex flex-col">
-        {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-slate-100 flex flex-col max-h-[90vh]">
+        {/* Header - Windows / Word Style Save As Dialog */}
+        <div className="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
               <Download className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">
-                Save As / ডাউনলোড ফরম্যাট নির্বাচন করুন
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-white">
+                  Save as type (সবগুলো ফরম্যাটে সেভ করুন)
+                </h2>
+                <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded-full border border-emerald-500/30">
+                  ১৮টি ফরম্যাট
+                </span>
+              </div>
               <p className="text-xs text-slate-400">
-                Word Document (.docx), PDF, TXT, HTML বা প্রিন্ট করুন
+                Word Document, PDF, XPS, HTML, RTF, TXT, XML, ODT সহ সবগুলো ফরম্যাট সাপোর্টেড
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Formats List matching Word Save As dialog */}
-        <div className="p-5 space-y-2.5 overflow-y-auto max-h-[60vh]">
-          {formats.map((fmt) => {
-            const isSelected = selectedFormat === fmt.id;
-            const Icon = fmt.icon;
-            return (
-              <div
-                key={fmt.id}
-                onClick={() => setSelectedFormat(fmt.id as any)}
-                className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-950/40 shadow-md'
-                    : 'border-slate-800 bg-slate-950/50 hover:bg-slate-800/40 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-xl border ${fmt.color}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-2">
-                      <span>{fmt.title}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 font-normal">
-                        {fmt.badge}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{fmt.desc}</p>
-                  </div>
-                </div>
+        {/* Search & Filter Bar */}
+        <div className="p-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="ফরম্যাট খুঁজুন (Search by format, e.g. docx, pdf, rtf, txt, xml)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+            />
+          </div>
 
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 hover:text-white transition-colors shrink-0"
+            title="ব্রাউজার থেকে সরাসরি প্রিন্ট করুন"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-400" />
+            <span>Direct Print</span>
+          </button>
+        </div>
+
+        {/* Dropdown Options List */}
+        <div className="p-4 overflow-y-auto flex-1 space-y-2 max-h-[50vh] scrollbar-thin">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
+            Save as type:
+          </div>
+
+          <div className="space-y-1.5">
+            {filteredFormats.map((fmt) => {
+              const isSelected = selectedFormatId === fmt.id;
+              return (
                 <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                  key={fmt.id}
+                  onClick={() => setSelectedFormatId(fmt.id)}
+                  className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'border-blue-500 bg-blue-600 text-white'
-                      : 'border-slate-700 bg-slate-800'
+                      ? 'border-blue-500 bg-blue-950/50 shadow-md ring-1 ring-blue-500/50'
+                      : 'border-slate-800 bg-slate-950/40 hover:bg-slate-800/50 hover:border-slate-700'
                   }`}
                 >
-                  {isSelected && <Check className="w-3 h-3" />}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono text-[10px] font-bold ${
+                        isSelected
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-800 text-slate-400 border border-slate-700'
+                      }`}
+                    >
+                      {fmt.extension.replace('.', '').slice(0, 4).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white flex items-center gap-2">
+                        <span>{fmt.name}</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-normal">
+                          {fmt.category}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">{fmt.description}</p>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-600 text-white'
+                        : 'border-slate-700 bg-slate-800'
+                    }`}
+                  >
+                    {isSelected && <Check className="w-3 h-3" />}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950 flex justify-between items-center">
-          <div className="text-xs text-slate-400">
-            ফাইল নেম: <span className="text-white font-mono">{data.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume.{selectedFormat}</span>
+        <div className="p-4 border-t border-slate-800 bg-slate-950 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="text-xs text-slate-400 text-center sm:text-left">
+            ফাইল নেম:{' '}
+            <span className="text-white font-mono font-semibold">
+              {data.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume{selectedFormat.extension}
+            </span>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-xl"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-xl transition-colors"
             >
-              বাতিল
+              বাতিল (Cancel)
             </button>
             <button
               type="button"
               onClick={handleExport}
               disabled={isExporting}
-              className="flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-xs font-bold text-white rounded-xl shadow-lg transition-all"
+              className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-xs font-bold text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>{isExporting ? 'তৈরি হচ্ছে...' : 'ডাউনলোড করুন (Save)'}</span>
+              <Download className="w-4 h-4" />
+              <span>{isExporting ? 'তৈরি হচ্ছে...' : 'সেভ করুন (Save)'}</span>
             </button>
           </div>
         </div>

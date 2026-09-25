@@ -35,7 +35,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
   const addSkillCategory = () => {
     const newSkill = {
-      id: `sk-${Date.now()}`,
+      id: `sk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       categoryName: 'New Skill Category',
       skillsText: 'Skill 1, Skill 2, Skill 3, Skill 4',
     };
@@ -57,7 +57,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
   const addProject = () => {
     const newProj = {
-      id: `proj-${Date.now()}`,
+      id: `proj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       title: 'Project Title',
       subtitle: 'Key Focus or Platform',
       liveDemoLabel: 'Live Demo',
@@ -109,7 +109,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
   const addEducation = () => {
     const newEdu = {
-      id: `edu-${Date.now()}`,
+      id: `edu-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       degree: 'Degree Name — Major / Field of Study',
       institution: 'Institution / University Name',
       statusOrDate: 'Ongoing / Year',
@@ -126,7 +126,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
   // Custom Section Handlers
   const addCustomSection = () => {
     const newSection = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       sectionTitle: 'CUSTOM SECTION TITLE (e.g. WORK EXPERIENCE / CERTIFICATIONS)',
       content: 'Write details or achievements here...',
       bullets: ['Key highlight or achievement point...'],
@@ -303,7 +303,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
         <div className="space-y-1 text-xs">
           {data.skills.map((sk, idx) => (
-            <div key={sk.id || idx} className="group/sk flex items-start justify-between gap-2">
+            <div key={sk.id ? `${sk.id}-${idx}` : `sk-${idx}`} className="group/sk flex items-start justify-between gap-2">
               <div className="flex-1 leading-snug">
                 <Editable
                   value={sk.categoryName}
@@ -357,7 +357,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
         <div className="space-y-4">
           {data.projects.map((proj, pIdx) => (
-            <div key={proj.id || pIdx} className="space-y-1 group/proj">
+            <div key={proj.id ? `${proj.id}-${pIdx}` : `proj-${pIdx}`} className="space-y-1 group/proj">
               {/* Project Title & Interactive Link Row */}
               <div className="flex justify-between items-baseline flex-wrap gap-1">
                 <div className="flex items-baseline flex-wrap gap-1 text-xs font-bold text-slate-900">
@@ -494,7 +494,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
         <div className="space-y-2">
           {data.education.map((edu, idx) => (
-            <div key={edu.id || idx} className="group/edu text-xs space-y-0.5">
+            <div key={edu.id ? `${edu.id}-${idx}` : `edu-${idx}`} className="group/edu text-xs space-y-0.5">
               <div className="flex justify-between items-baseline">
                 <Editable
                   value={edu.degree}
@@ -582,7 +582,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
 
       {/* 7. DYNAMIC CUSTOM SECTIONS */}
       {(data.customSections || []).map((sec, sIdx) => (
-        <section key={sec.id || sIdx} className="mt-4 group/sec relative">
+        <section key={sec.id ? `${sec.id}-${sIdx}` : `custom-${sIdx}`} className="mt-4 group/sec relative">
           <div className="flex justify-between items-center border-b border-slate-300 pb-0.5 mb-2">
             <Editable
               value={sec.sectionTitle}

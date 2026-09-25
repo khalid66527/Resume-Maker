@@ -3,16 +3,19 @@
 import React, { useState, useRef } from 'react';
 import { ResumeData } from '@/types/resume';
 import { parseRawResumeText } from '@/lib/resumeParser';
-import { khalidResumeData, emptyResumeData } from '@/lib/khalidResumeData';
+import { khalidResumeData, khalidModernPhotoResumeData, emptyResumeData } from '@/lib/khalidResumeData';
 import {
   Upload,
   FileText,
-  FileCode,
   Sparkles,
   ClipboardPaste,
   X,
-  CheckCircle,
+  FileCode,
+  Layers,
+  UserCheck,
 } from 'lucide-react';
+
+import { extractTextFromFile } from '@/lib/fileTextExtractor';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -31,42 +34,40 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsLoading(true);
-    const reader = new FileReader();
-
-    if (file.name.endsWith('.json')) {
-      reader.onload = (event) => {
-        try {
-          const parsed = JSON.parse(event.target?.result as string);
-          if (parsed.fullName) {
-            onLoadData(parsed);
-            onClose();
-          } else {
-            alert('JSON ফাইলটি সঠিক ফরম্যাটে নেই।');
-          }
-        } catch {
-          alert('JSON রিড করতে ব্যর্থ হয়েছে।');
-        } finally {
-          setIsLoading(false);
+    try {
+      if (file.name.endsWith('.json')) {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (parsed.fullName) {
+          onLoadData(parsed);
+          onClose();
+        } else {
+          alert('JSON ফাইলটি সঠিক ফরম্যাটে নেই।');
         }
-      };
-      reader.readAsText(file);
-    } else {
-      // For TXT or plain file read
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        if (text) {
+      } else {
+        // PDF, DOCX, DOC, RTF, HTML, TXT, XML
+        const text = await extractTextFromFile(file);
+        if (text && text.trim().length > 0) {
           const parsed = parseRawResumeText(text);
           onLoadData(parsed);
           onClose();
+        } else {
+          alert('ফাইল থেকে টেক্সট রিড করা সম্ভব হয়নি। অনুগ্রহ করে টেক্সট কপি করে নিচে পেস্ট করুন।');
         }
-        setIsLoading(false);
-      };
-      reader.readAsText(file);
+      }
+    } catch (err) {
+      console.error('File parsing error:', err);
+      alert('ফাইল রিড করতে সমস্যা হয়েছে। অনুগ্রহ করে টেক্সট কপি করে পেস্ট বক্সে দিন।');
+    } finally {
+      setIsLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -81,20 +82,20 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-slate-100 flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-slate-100 flex flex-col">
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl">
+            <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
               <Upload className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-white">
-                রেজিউমে আপলোড বা ইমপোর্ট করুন (Import Resume)
+                রেজিউমে আপলোড বা ইমপোর্ট করুন (Upload Any Format)
               </h2>
               <p className="text-xs text-slate-400">
-                যেকোনো ফাইল আপলোড করুন অথবা সরাসরি টেক্সট পেস্ট করুন
+                Word (.docx/.doc), PDF, RTF, TXT, HTML, XML, ODT সহ যেকোনো ফাইল আপলোড করুন
               </p>
             </div>
           </div>
@@ -109,39 +110,39 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
-          {/* Quick Pre-loads */}
+          {/* Quick Pre-loads: Blank & Demo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                onLoadData(khalidResumeData);
-                onClose();
-              }}
-              className="flex items-center gap-3 p-3.5 bg-blue-950/40 hover:bg-blue-900/40 border border-blue-500/40 rounded-xl text-left transition-all group"
-            >
-              <div className="p-2 bg-blue-600 text-white rounded-lg group-hover:scale-105 transition-transform">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white">MD. KHALID HASAN Resume</div>
-                <div className="text-[11px] text-blue-300">আপনার দেওয়া মূল রেজিউমে লোড করুন</div>
-              </div>
-            </button>
-
             <button
               type="button"
               onClick={() => {
                 onLoadData(emptyResumeData);
                 onClose();
               }}
-              className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition-all"
+              className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 rounded-xl text-left transition-all group"
             >
-              <div className="p-2 bg-slate-800 text-slate-300 rounded-lg">
-                <FileText className="w-4 h-4" />
+              <div className="p-2.5 bg-slate-800 text-slate-200 rounded-lg group-hover:bg-slate-700">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-xs font-bold text-white">Blank Starter Template</div>
-                <div className="text-[11px] text-slate-400">নতুন করে লেখার জন্য ফাঁকা ফরম্যাট</div>
+                <div className="text-xs font-bold text-white">Blank Resume (ফাঁকা রেজিউমে)</div>
+                <div className="text-[11px] text-slate-400">নতুন করে নিজে টাইপ করার জন্য</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onLoadData(khalidResumeData);
+                onClose();
+              }}
+              className="flex items-center gap-3 p-3.5 bg-blue-950/40 hover:bg-blue-900/40 border border-blue-500/40 hover:border-blue-400/60 rounded-xl text-left transition-all group"
+            >
+              <div className="p-2.5 bg-blue-600 text-white rounded-lg group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white">Demo Resume (ডেমো রেজিউমে)</div>
+                <div className="text-[11px] text-blue-300">রেডিমেড স্যাম্পল ডাটা লোড করুন</div>
               </div>
             </button>
           </div>
@@ -153,22 +154,22 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             </span>
           </div>
 
-          {/* File Upload Zone */}
+          {/* Universal File Upload Zone */}
           <div
             onClick={() => fileInputRef.current?.click()}
             className="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-2xl p-6 text-center cursor-pointer bg-slate-950/50 hover:bg-blue-950/10 transition-all space-y-2"
           >
             <Upload className="w-8 h-8 text-blue-400 mx-auto" />
             <div className="text-xs font-bold text-white">
-              ফাইল ড্রপ করুন অথবা ব্রাউজ করুন (TXT, JSON)
+              যেকোনো ফরম্যাটের ফাইল ড্রপ করুন অথবা ব্রাউজ করুন
             </div>
             <p className="text-[11px] text-slate-400">
-              সাপোর্টেড ফরম্যাট: .txt, .json, .docx
+              সাপোর্টেড ফরম্যাট: .docx, .doc, .dotx, .pdf, .rtf, .txt, .json, .html, .xml, .odt, .wps
             </p>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.json,.docx"
+              accept=".docx,.doc,.dotx,.dotm,.dot,.pdf,.xps,.rtf,.txt,.json,.html,.htm,.xml,.odt,.wps,.mht,.mhtml,*"
               onChange={handleFileUpload}
               className="hidden"
             />
@@ -184,7 +185,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               rows={4}
               value={pastedText}
               onChange={(e) => setPastedText(e.target.value)}
-              placeholder="এখানে আপনার রেজিউমের লেখা পেস্ট করলে স্বয়ংক্রিয়ভাবে ফিল হয়ে যাবে..."
+              placeholder="যেকোনো ফাইল থেকে কপি করে এখানে পেস্ট করুন..."
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
             />
           </div>

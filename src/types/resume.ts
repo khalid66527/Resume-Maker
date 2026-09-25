@@ -51,6 +51,7 @@ export interface CustomSection {
 export interface ResumeData {
   fullName: string;
   title: string;
+  photoUrl?: string;
   contact: ContactInfo;
   summaryTitle?: string;
   summary: string;
