@@ -156,19 +156,34 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
           {/* Universal File Upload Zone */}
           <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-2xl p-6 text-center cursor-pointer bg-slate-950/50 hover:bg-blue-950/10 transition-all space-y-2"
+            onClick={() => !isLoading && fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2 ${
+              isLoading
+                ? 'border-blue-500 bg-blue-950/20 opacity-80 cursor-wait'
+                : 'border-slate-700 hover:border-blue-500 bg-slate-950/50 hover:bg-blue-950/10'
+            }`}
           >
-            <Upload className="w-8 h-8 text-blue-400 mx-auto" />
-            <div className="text-xs font-bold text-white">
-              যেকোনো ফরম্যাটের ফাইল ড্রপ করুন অথবা ব্রাউজ করুন
-            </div>
-            <p className="text-[11px] text-slate-400">
-              সাপোর্টেড ফরম্যাট: .docx, .doc, .dotx, .pdf, .rtf, .txt, .json, .html, .xml, .odt, .wps
-            </p>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center space-y-2 py-2">
+                <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="text-xs font-bold text-blue-400">ফাইল রিড ও কনভার্ট করা হচ্ছে...</div>
+                <p className="text-[11px] text-slate-400">PDF এর টেক্সট প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন</p>
+              </div>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-blue-400 mx-auto" />
+                <div className="text-xs font-bold text-white">
+                  যেকোনো ফরম্যাটের ফাইল ড্রপ করুন অথবা ব্রাউজ করুন
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  সাপোর্টেড ফরম্যাট: .docx, .doc, .dotx, .pdf, .rtf, .txt, .json, .html, .xml, .odt, .wps
+                </p>
+              </>
+            )}
             <input
               ref={fileInputRef}
               type="file"
+              disabled={isLoading}
               accept=".docx,.doc,.dotx,.dotm,.dot,.pdf,.xps,.rtf,.txt,.json,.html,.htm,.xml,.odt,.wps,.mht,.mhtml,*"
               onChange={handleFileUpload}
               className="hidden"
