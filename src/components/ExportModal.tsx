@@ -8,10 +8,11 @@ import {
   FileText,
   Printer,
   X,
-  Check,
-  Search,
-  ChevronDown,
-  Layers,
+  CheckCircle2,
+  AlertCircle,
+  FileCode,
+  Globe,
+  Database,
 } from 'lucide-react';
 
 interface ExportModalProps {
@@ -25,31 +26,29 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onClose,
   data,
 }) => {
-  const [selectedFormatId, setSelectedFormatId] = useState<string>('docx');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting, setIsExporting] = useState<string | null>(null);
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const filteredFormats = ALL_WORD_FORMATS.filter(
-    (f) =>
-      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.extension.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDownload = async (formatId: string) => {
+    setIsExporting(formatId);
+    setErrorMsg(null);
+    setDownloadSuccess(null);
 
-  const selectedFormat =
-    ALL_WORD_FORMATS.find((f) => f.id === selectedFormatId) || ALL_WORD_FORMATS[0];
-
-  const handleExport = async () => {
-    setIsExporting(true);
     try {
-      await downloadInFormat(selectedFormatId, data, 'resume-canvas-sheet');
-    } catch (err) {
+      await downloadInFormat(formatId, data, 'resume-canvas-sheet');
+      const fmt = ALL_WORD_FORMATS.find((f) => f.id === formatId);
+      setDownloadSuccess(`✓ ${fmt?.name || formatId} সফলভাবে ডাউনলোড হয়েছে!`);
+      setTimeout(() => {
+        setDownloadSuccess(null);
+      }, 3500);
+    } catch (err: any) {
       console.error('Download error:', err);
+      setErrorMsg('ডাউনলোডে সমস্যা হয়েছে। সরাসরি প্রিন্ট বা .txt ট্রাই করুন।');
     } finally {
-      setIsExporting(false);
-      onClose();
+      setIsExporting(null);
     }
   };
 
@@ -58,10 +57,27 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setTimeout(() => window.print(), 200);
   };
 
+  const getFormatIcon = (id: string) => {
+    switch (id) {
+      case 'docx':
+        return <FileText className="w-5 h-5 text-blue-400" />;
+      case 'pdf':
+        return <Download className="w-5 h-5 text-rose-400" />;
+      case 'txt':
+        return <FileCode className="w-5 h-5 text-amber-400" />;
+      case 'html':
+        return <Globe className="w-5 h-5 text-emerald-400" />;
+      case 'json':
+        return <Database className="w-5 h-5 text-purple-400" />;
+      default:
+        return <FileText className="w-5 h-5 text-slate-400" />;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-slate-100 flex flex-col max-h-[90vh]">
-        {/* Header - Windows / Word Style Save As Dialog */}
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden text-slate-100 flex flex-col">
+        {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
@@ -70,14 +86,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-white">
-                  Save as type (সবগুলো ফরম্যাটে সেভ করুন)
+                  সেভ ও ডাউনলোড (Save As)
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded-full border border-emerald-500/30">
-                  ১৮টি ফরম্যাট
+                <span className="text-[10px] px-2 py-0.5 bg-blue-500/20 text-blue-300 font-bold rounded-full border border-blue-500/30">
+                  ৫টি প্রধান ফরম্যাট
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Word Document, PDF, XPS, HTML, RTF, TXT, XML, ODT সহ সবগুলো ফরম্যাট সাপোর্টেড
+                পছন্দের ফরম্যাটে ১-ক্লিকে সরাসরি ডাউনলোড করুন
               </p>
             </div>
           </div>
@@ -90,112 +106,84 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </button>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="p-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="ফরম্যাট খুঁজুন (Search by format, e.g. docx, pdf, rtf, txt, xml)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-            />
-          </div>
+        {/* Modal Body */}
+        <div className="p-5 space-y-3.5">
+          {/* Notification */}
+          {downloadSuccess && (
+            <div className="p-3 bg-emerald-950/90 border border-emerald-500/50 rounded-xl flex items-center gap-2.5 text-emerald-300 text-xs font-semibold animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{downloadSuccess}</span>
+            </div>
+          )}
 
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 hover:text-white transition-colors shrink-0"
-            title="ব্রাউজার থেকে সরাসরি প্রিন্ট করুন"
-          >
-            <Printer className="w-3.5 h-3.5 text-amber-400" />
-            <span>Direct Print</span>
-          </button>
-        </div>
+          {errorMsg && (
+            <div className="p-3 bg-rose-950/90 border border-rose-500/50 rounded-xl flex items-center gap-2.5 text-rose-300 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
-        {/* Dropdown Options List */}
-        <div className="p-4 overflow-y-auto flex-1 space-y-2 max-h-[50vh] scrollbar-thin">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
-            Save as type:
-          </div>
-
-          <div className="space-y-1.5">
-            {filteredFormats.map((fmt) => {
-              const isSelected = selectedFormatId === fmt.id;
+          {/* 5 Clean Format Options */}
+          <div className="space-y-2">
+            {ALL_WORD_FORMATS.map((fmt) => {
+              const isCurrentlyExporting = isExporting === fmt.id;
               return (
                 <div
                   key={fmt.id}
-                  onClick={() => setSelectedFormatId(fmt.id)}
-                  className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border cursor-pointer transition-all ${
-                    isSelected
-                      ? 'border-blue-500 bg-blue-950/50 shadow-md ring-1 ring-blue-500/50'
-                      : 'border-slate-800 bg-slate-950/40 hover:bg-slate-800/50 hover:border-slate-700'
-                  }`}
+                  onClick={() => handleDownload(fmt.id)}
+                  className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/80 hover:border-slate-600 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono text-[10px] font-bold ${
-                        isSelected
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-800 text-slate-400 border border-slate-700'
-                      }`}
-                    >
-                      {fmt.extension.replace('.', '').slice(0, 4).toUpperCase()}
+                    <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 group-hover:scale-105 transition-transform">
+                      {getFormatIcon(fmt.id)}
                     </div>
                     <div>
                       <div className="text-xs font-bold text-white flex items-center gap-2">
                         <span>{fmt.name}</span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-normal">
-                          {fmt.category}
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                          {fmt.extension}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-400">{fmt.description}</p>
                     </div>
                   </div>
 
-                  <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-600 text-white'
-                        : 'border-slate-700 bg-slate-800'
-                    }`}
+                  <button
+                    type="button"
+                    disabled={!!isExporting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 group-hover:bg-blue-600 border border-blue-500/30 group-hover:border-blue-500 rounded-lg text-xs font-semibold text-blue-300 group-hover:text-white transition-all shrink-0"
                   >
-                    {isSelected && <Check className="w-3 h-3" />}
-                  </div>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>{isCurrentlyExporting ? 'ডাউনলোড হচ্ছে...' : 'ডাউনলোড'}</span>
+                  </button>
                 </div>
               );
             })}
           </div>
+
+          {/* Direct Print Option */}
+          <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <span className="text-xs text-slate-400">অথবা ফুল পেজ প্রিন্ট করতে চান?</span>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors"
+            >
+              <Printer className="w-3.5 h-3.5 text-amber-400" />
+              <span>Direct Print / PDF View</span>
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="text-xs text-slate-400 text-center sm:text-left">
-            ফাইল নেম:{' '}
-            <span className="text-white font-mono font-semibold">
-              {data.fullName.replace(/[^a-zA-Z0-9]/g, '_')}_Resume{selectedFormat.extension}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-xl transition-colors"
-            >
-              বাতিল (Cancel)
-            </button>
-            <button
-              type="button"
-              onClick={handleExport}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-xs font-bold text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-            >
-              <Download className="w-4 h-4" />
-              <span>{isExporting ? 'তৈরি হচ্ছে...' : 'সেভ করুন (Save)'}</span>
-            </button>
-          </div>
+        <div className="p-3.5 border-t border-slate-800 bg-slate-950 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-lg transition-colors"
+          >
+            বন্ধ করুন (Close)
+          </button>
         </div>
       </div>
     </div>

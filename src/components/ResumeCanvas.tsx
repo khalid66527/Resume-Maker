@@ -158,7 +158,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
       }}
     >
       {/* 1. HEADER SECTION (Full Name, Title, Contact links) */}
-      <header className="text-center pb-3 space-y-1 group/hdr relative">
+      <div className="resume-header text-center pb-3 space-y-1 group/hdr relative">
         {/* Full Name */}
         <div className="flex items-center justify-center">
           <Editable
@@ -241,26 +241,29 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({ data, onChange }) =>
             />
           </div>
 
-          <span>|</span>
-
-          {/* GitHub */}
-          <div className="inline-flex items-center gap-1">
-            <Editable
-              value={data.contact.githubLabel || 'GitHub:'}
-              onChange={(val) => updateContact('githubLabel', val)}
-              as="span"
-              className="font-semibold text-slate-800"
-              placeholder="GitHub:"
-            />
-            <EditableLink
-              label={data.contact.github || 'github.com/khalid66527'}
-              url={data.contact.githubUrl || 'https://github.com/khalid66527'}
-              onChangeLabel={(val) => updateContact('github', val)}
-              onChangeUrl={(val) => updateContact('githubUrl', val)}
-            />
-          </div>
+          {data.contact.github ? (
+            <>
+              <span>|</span>
+              {/* GitHub */}
+              <div className="inline-flex items-center gap-1">
+                <Editable
+                  value={data.contact.githubLabel || 'GitHub:'}
+                  onChange={(val) => updateContact('githubLabel', val)}
+                  as="span"
+                  className="font-semibold text-slate-800"
+                  placeholder="GitHub:"
+                />
+                <EditableLink
+                  label={data.contact.github}
+                  url={data.contact.githubUrl || `https://${data.contact.github}`}
+                  onChangeLabel={(val) => updateContact('github', val)}
+                  onChangeUrl={(val) => updateContact('githubUrl', val)}
+                />
+              </div>
+            </>
+          ) : null}
         </div>
-      </header>
+      </div>
 
       {/* 2. PROFESSIONAL SUMMARY */}
       <section className="mt-4">

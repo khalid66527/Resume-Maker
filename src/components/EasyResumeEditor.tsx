@@ -7,6 +7,7 @@ import { ResumeCanvas } from './ResumeCanvas';
 import { RichToolbar } from './RichToolbar';
 import { UploadModal } from './UploadModal';
 import { ExportModal } from './ExportModal';
+import { downloadInFormat } from '@/lib/formatExporters';
 import {
   Upload,
   Download,
@@ -80,7 +81,7 @@ export const EasyResumeEditor: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
       {/* 1. Header Action Bar */}
-      <header className="bg-slate-900 border-b border-slate-800 shrink-0 z-30 shadow-md">
+      <header className="no-print app-header bg-slate-900 border-b border-slate-800 shrink-0 z-30 shadow-md">
         <div className="flex items-center justify-between px-4 py-2.5 gap-2 border-b border-slate-800/80">
           {/* Logo & Title */}
           <div className="flex items-center gap-3">
@@ -212,22 +213,55 @@ export const EasyResumeEditor: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Export Button */}
+          {/* Right Export & Quick Download Buttons */}
           <div className="flex items-center gap-2">
+            {/* Quick Word .docx */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await downloadInFormat('docx', data, 'resume-canvas-sheet');
+                  setSavedAlert(true);
+                  setTimeout(() => setSavedAlert(false), 2000);
+                } catch (e) {
+                  console.error('Word download error', e);
+                  alert('Word ডাউনলোড করতে সমস্যা হয়েছে। দয়া করে PDF বা অন্য ফরম্যাটে ট্রাই করুন।');
+                }
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              title="মাইক্রোসফট ওয়ার্ড (.docx) ফাইলে ডাউনলোড করুন"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Word (.docx)</span>
+            </button>
+
+            {/* Quick PDF Print / Save */}
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              title="সরাসরি PDF সেভ / প্রিন্ট করুন"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>PDF / Print</span>
+            </button>
+
+            {/* Full Save As / 5 Formats */}
             <button
               type="button"
               onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/25 active:scale-95 transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-semibold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
+              title="সবগুলো ফরম্যাটে সেভ করুন"
             >
-              <Download className="w-4 h-4" />
-              <span>Save As / ডাউনলোড</span>
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Save As</span>
             </button>
           </div>
         </div>
 
         {/* 2. Word Ribbon Toolbar */}
-        <div className="px-4 py-1.5 bg-slate-950/90 border-t border-slate-800/80 flex items-center justify-between gap-4 overflow-x-auto">
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="px-4 py-1.5 bg-slate-950/90 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <RichToolbar />
           </div>
 

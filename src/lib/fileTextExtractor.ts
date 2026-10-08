@@ -5,11 +5,10 @@
 export async function extractTextFromFile(file: File): Promise<string> {
   const fileName = file.name.toLowerCase();
 
-  // 1. PDF File extraction
+  // 1. PDF File extraction with line position tracking
   if (fileName.endsWith('.pdf')) {
     try {
       const pdfjs = await import('pdfjs-dist');
-      // Set worker source to CDN for smooth client-side loading
       pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
       const arrayBuffer = await file.arrayBuffer();
@@ -20,17 +19,43 @@ export async function extractTextFromFile(file: File): Promise<string> {
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const pageStrings = textContent.items
-          .map((item: any) => item.str || '')
-          .join(' ');
-        fullText += pageStrings + '\n';
+        
+        let lastY: number | null = null;
+        let pageLines: string[] = [];
+        let currentLine = '';
+
+        for (const item of (textContent.items as any[])) {
+          const str = (item.str || '').trim();
+          if (!str) continue;
+
+          const currentY = item.transform ? Math.round(item.transform[5]) : null;
+
+          if (lastY !== null && currentY !== null && Math.abs(currentY - lastY) > 6) {
+            if (currentLine.trim()) {
+              pageLines.push(currentLine.trim());
+            }
+            currentLine = str;
+          } else {
+            currentLine = currentLine ? `${currentLine} ${str}` : str;
+          }
+
+          if (currentY !== null) {
+            lastY = currentY;
+          }
+        }
+
+        if (currentLine.trim()) {
+          pageLines.push(currentLine.trim());
+        }
+
+        fullText += pageLines.join('\n') + '\n\n';
       }
 
       if (fullText.trim().length > 20) {
         return fullText;
       }
     } catch (err) {
-      console.warn('pdfjs-dist primary parse failed, trying fallback stream extraction', err);
+      console.warn('pdfjs-dist parse error, trying fallback', err);
     }
 
     // Fallback simple PDF text stream extractor if worker fails
@@ -39,7 +64,6 @@ export async function extractTextFromFile(file: File): Promise<string> {
       const decoder = new TextDecoder('utf-8', { fatal: false });
       const raw = decoder.decode(buffer);
       
-      // Extract text inside BT ... ET text blocks or /Contents streams or parenthesis (text)
       const textMatches: string[] = [];
       const parenthesesRegex = /\(([^()]{2,})\)\s*T[jJ]/g;
       let match;
@@ -74,14 +98,12 @@ export async function extractTextFromFile(file: File): Promise<string> {
     reader.onload = () => {
       let content = reader.result as string;
       
-      // If it's HTML, strip HTML tags for cleaner text parsing
       if (fileName.endsWith('.html') || fileName.endsWith('.htm') || fileName.endsWith('.mht')) {
         const div = document.createElement('div');
         div.innerHTML = content;
         content = div.innerText || div.textContent || content;
       }
       
-      // If RTF, strip rtf control codes
       if (fileName.endsWith('.rtf')) {
         content = content
           .replace(/\\par[d]?/g, '\n')

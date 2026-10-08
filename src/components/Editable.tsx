@@ -21,41 +21,47 @@ export const Editable: React.FC<EditableProps> = ({
 }) => {
   const ref = useRef<HTMLElement | null>(null);
 
-  // Synchronize internal DOM only when not actively focused by user
+  // Synchronize internal DOM when value changes externally (e.g. template switch, upload)
   useEffect(() => {
     if (ref.current && document.activeElement !== ref.current) {
-      if (ref.current.innerText !== (value || '')) {
-        ref.current.innerText = value || '';
+      if (ref.current.textContent !== (value || '')) {
+        ref.current.textContent = value || '';
       }
     }
   }, [value]);
 
-  const handleBlur = () => {
-    if (ref.current) {
-      const text = ref.current.innerText;
-      onChange(text);
+  const setRef = (node: HTMLElement | null) => {
+    ref.current = node;
+    if (node && node.textContent !== (value || '') && document.activeElement !== node) {
+      node.textContent = value || '';
     }
   };
 
   const handleInput = () => {
     if (ref.current) {
-      const text = ref.current.innerText;
+      const text = ref.current.textContent || '';
+      onChange(text);
+    }
+  };
+
+  const handleBlur = () => {
+    if (ref.current) {
+      const text = ref.current.textContent || '';
       onChange(text);
     }
   };
 
   return (
     <Tag
-      ref={ref as any}
+      ref={setRef as any}
       contentEditable={true}
       suppressContentEditableWarning={true}
       onInput={handleInput}
       onBlur={handleBlur}
+      dir="ltr"
       className={`outline-none transition-all duration-150 empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 empty:before:pointer-events-none hover:bg-blue-50/60 hover:ring-1 hover:ring-blue-400 focus:bg-blue-50 focus:ring-2 focus:ring-blue-600 rounded px-1 -mx-1 cursor-text ${className}`}
-      style={style}
+      style={{ ...style, direction: 'ltr', unicodeBidi: 'plaintext' }}
       data-placeholder={placeholder}
-    >
-      {value || ''}
-    </Tag>
+    />
   );
 };

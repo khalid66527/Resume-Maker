@@ -18,95 +18,15 @@ export const ALL_WORD_FORMATS: FormatOption[] = [
     name: 'Word Document (*.docx)',
     mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     category: 'Word',
-    description: 'Modern standard Microsoft Word document',
-  },
-  {
-    id: 'docm',
-    extension: '.docm',
-    name: 'Word Macro-Enabled Document (*.docm)',
-    mimeType: 'application/vnd.ms-word.document.macroEnabled.12',
-    category: 'Word',
-    description: 'Microsoft Word macro-enabled document',
-  },
-  {
-    id: 'doc',
-    extension: '.doc',
-    name: 'Word 97-2003 Document (*.doc)',
-    mimeType: 'application/msword',
-    category: 'Word',
-    description: 'Legacy Microsoft Word 97-2003 binary format',
-  },
-  {
-    id: 'dotx',
-    extension: '.dotx',
-    name: 'Word Template (*.dotx)',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
-    category: 'Word',
-    description: 'Microsoft Word template file',
-  },
-  {
-    id: 'dotm',
-    extension: '.dotm',
-    name: 'Word Macro-Enabled Template (*.dotm)',
-    mimeType: 'application/vnd.ms-word.template.macroEnabled.12',
-    category: 'Word',
-    description: 'Microsoft Word macro-enabled template',
-  },
-  {
-    id: 'dot',
-    extension: '.dot',
-    name: 'Word 97-2003 Template (*.dot)',
-    mimeType: 'application/msword',
-    category: 'Word',
-    description: 'Legacy Microsoft Word 97-2003 template format',
+    description: 'Microsoft Word & Google Docs এডিটেবল ফাইল',
   },
   {
     id: 'pdf',
     extension: '.pdf',
-    name: 'PDF (*.pdf)',
+    name: 'PDF Document (*.pdf)',
     mimeType: 'application/pdf',
     category: 'PDF & XPS',
-    description: 'Adobe Portable Document Format (Standard Print Ready)',
-  },
-  {
-    id: 'xps',
-    extension: '.xps',
-    name: 'XPS Document (*.xps)',
-    mimeType: 'application/vnd.ms-xpsdocument',
-    category: 'PDF & XPS',
-    description: 'Microsoft XML Paper Specification document',
-  },
-  {
-    id: 'mht',
-    extension: '.mhtml',
-    name: 'Single File Web Page (*.mht;*.mhtml)',
-    mimeType: 'multipart/related',
-    category: 'Web',
-    description: 'Complete standalone single-file archived web page',
-  },
-  {
-    id: 'html',
-    extension: '.html',
-    name: 'Web Page (*.htm;*.html)',
-    mimeType: 'text/html',
-    category: 'Web',
-    description: 'Standard modern HTML5 responsive web document',
-  },
-  {
-    id: 'html_filtered',
-    extension: '.html',
-    name: 'Web Page, Filtered (*.htm;*.html)',
-    mimeType: 'text/html',
-    category: 'Web',
-    description: 'Clean compact HTML optimized for minimum file size',
-  },
-  {
-    id: 'rtf',
-    extension: '.rtf',
-    name: 'Rich Text Format (*.rtf)',
-    mimeType: 'application/rtf',
-    category: 'Text & RTF',
-    description: 'Universal cross-platform Rich Text Format with styles',
+    description: 'চাকরির আবেদন ও সরাসরি প্রিন্ট উপযোগী স্ট্যান্ডার্ড PDF',
   },
   {
     id: 'txt',
@@ -114,39 +34,15 @@ export const ALL_WORD_FORMATS: FormatOption[] = [
     name: 'Plain Text (*.txt)',
     mimeType: 'text/plain',
     category: 'Text & RTF',
-    description: 'Standard unformatted plain text for ATS copy-pasting',
+    description: 'ATS ফ্রেন্ডলি ও কপি-পেস্ট উপযোগী ক্লিন টেক্সট',
   },
   {
-    id: 'xml',
-    extension: '.xml',
-    name: 'Word XML Document (*.xml)',
-    mimeType: 'application/xml',
-    category: 'Word',
-    description: 'Microsoft WordprocessingML standard XML document',
-  },
-  {
-    id: 'xml2003',
-    extension: '.xml',
-    name: 'Word 2003 XML Document (*.xml)',
-    mimeType: 'application/xml',
-    category: 'Word',
-    description: 'Legacy Word 2003 schema XML file',
-  },
-  {
-    id: 'odt',
-    extension: '.odt',
-    name: 'OpenDocument Text (*.odt)',
-    mimeType: 'application/vnd.oasis.opendocument.text',
-    category: 'Open Formats',
-    description: 'OpenOffice and LibreOffice standard document',
-  },
-  {
-    id: 'wps',
-    extension: '.wps',
-    name: 'Works 6 - 9 Document (*.wps)',
-    mimeType: 'application/vnd.ms-works',
-    category: 'Open Formats',
-    description: 'Microsoft Works word processor format',
+    id: 'html',
+    extension: '.html',
+    name: 'Web Page (*.html)',
+    mimeType: 'text/html',
+    category: 'Web',
+    description: 'যেকোনো ব্রাউজারে ভিউ করার মতো স্ট্যান্ডার্ড ওয়েব পেজ',
   },
   {
     id: 'json',
@@ -154,7 +50,7 @@ export const ALL_WORD_FORMATS: FormatOption[] = [
     name: 'ResumeMaker Data Backup (*.json)',
     mimeType: 'application/json',
     category: 'Open Formats',
-    description: 'Full data backup for instant restore and editing',
+    description: 'ভবিষ্যতে রিস্টোর বা লোড করার ব্যাকআপ ডাটা',
   },
 ];
 
@@ -455,8 +351,11 @@ function saveBlob(blob: Blob, filename: string) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 2000);
 }

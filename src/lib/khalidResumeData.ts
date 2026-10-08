@@ -13,9 +13,9 @@ export const khalidResumeData: ResumeData = {
     linkedinLabel: 'LinkedIn:',
     linkedin: 'linkedin.com/in/khalid2004',
     linkedinUrl: 'https://linkedin.com/in/khalid2004',
-    githubLabel: 'GitHub:',
-    github: 'github.com/khalid66527',
-    githubUrl: 'https://github.com/khalid66527',
+    githubLabel: '',
+    github: '',
+    githubUrl: '',
   },
   summaryTitle: 'PROFESSIONAL SUMMARY',
   summary:
